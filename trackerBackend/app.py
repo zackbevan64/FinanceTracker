@@ -1,22 +1,21 @@
 from flask import Flask, jsonify, request
-
+from flask_cors import CORS
 import psycopg2
 from dotenv import load_dotenv
-import os
-
 
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
 
 def get_db_connection():
     connection = psycopg2.connect(
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT"),
-        database=os.getenv("DB_NAME"),
+        user="test",
+        password="testpassword",
+        host="localhost",
+        port="5432",
+        database="dev",
     )
     return connection
 
@@ -25,34 +24,48 @@ def get_db_connection():
 def get_transactions():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM transactions;")
+    cur.execute("SELECT * FROM dev.transactions;")
     transactions = cur.fetchall()
     cur.close()
     conn.close()
-    return jsonify(transactions)
+
+    transactionList = []
+    for transaction in transactions:
+        transactionList.append(
+            {
+                "transactionID": transaction[0],
+                "accountID": transaction[1],
+                "amount": transaction[2],
+                "transactionDate": transaction[3],
+            }
+        )
+    return jsonify(transactionList)
 
 
 @app.route("/transactions", methods=["POST"])
 def add_transaction():
-    data = request.get_json()
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO transactions (accountid, ammount) VALUES (%s, %s)",
-        (
-            data["accountid"],
-            data["ammount"],
-        ),
-    )
-    conn.commit()
-    cur.close()
-    conn.close()
-    return jsonify({"message": "Transaction added!"})
+    try:
+        data = request.get_json()
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO dev.transactions (accountid, amount, transactionDate) VALUES (%s, %s, %s)",
+            (data["accountID"], data["amount"], data["transactionDate"]),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": "Transaction added!"})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+    finally:
+        cur
+        conn.close()
 
 
 @app.route("/")
 def home():
-    return jsonify({"message": "Welcome to the Finance Tracker API! test"})
+    return jsonify({"message": "Welcome to the Finance Tracker API!"})
 
 
 if __name__ == "__main__":

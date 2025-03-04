@@ -9,13 +9,9 @@
 <body>
   <h1>Finance Tracker</h1>
   <form id="transaction-form">
-    <input type="number" id="amount" placeholder="Amount" required>
-    <select id="type" required>
-      <option value="income">Income</option>
-      <option value="expense">Expense</option>
-    </select>
-    <input type="text" id="category" placeholder="Category">
-    <input type="text" id="description" placeholder="Description">
+    <input type="text" id="accountID" placeholder="AccountID" required>
+    <input type="decimal" id="amount" placeholder="Amount" required>
+    <input type="date" id="transactionDate" placeholder="Transaction Date" required>
     <button type="submit">Add Transaction</button>
   </form>
   <ul id="transactions"></ul>
